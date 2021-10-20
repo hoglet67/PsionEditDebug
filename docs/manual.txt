@@ -1,0 +1,86 @@
+##############################################################
+PSION EDIT / DEBUG ROM
+##############################################################
+
+##############################################################
+# 3 Common commands
+##############################################################
+
+Q         - Quit
+ON        - Printer On
+OFF       - Printer Off
+
+##############################################################
+# 12 DEBUG commands
+##############################################################
+
+W         - Edit PC
+D         - Dump memory in hex/ascii     ; D or D<num lines> or D,<to addr>
+C         - Disassemble memory           ; C or C<num lines> or C,<to addr>
+F         - Edit dump memory line length
+B         - Set/Clear breakpoint
+G         - Goto PC
+A         - Edit A
+X         - Edit X
+Y         - Edit Y
+P         - Edit Flags
+R         - Print Registers
+M         - Edit Memory
+
+##############################################################
+# 42 EDIT commands
+##############################################################
+
+[ <space> ... ] <number> <line> - Replace the existing line in the normal way
+
+*COMMAND  - Execute a * Command
+>FILE     - SAVE program in the text space
+<FILE     - LOAD program to the text space
+NEW       - same as NEW in Atom Basic
+OLD       - same as OLD in Atom Basic
+
+?         - Shows page/top of each text and buffer space
+X         - Swap text space and buffer space
+B=<hex2>  - Set the buffer text space to <hex2>
+D=<char>  - Sets comment character to <char> (default is ^) - input beyond this is ignored
+
+Z<string> - Process <string> as a command and also save it to the cmd buffer (0x150)
+-         - Re-execute the command in the command buffer
+
+T         - Move to top line
+B         - Move to bottom line
+N         - Move to next line
+N-<num>   - Move backwards <num> lines
+N<num>    - Move forward <num> lines
+
+L         - List current line, current line unchanged
+LA        - List area containing current line (-4,+5), current line unchanged
+L.        - List all lines, update current line to after the last line listed
+LM        - List between marker1 and marker2, and update current line to marker2
+LF        - List next 10 lines, update current line to last line listed
+L<num >   - List next <num> lines, update current line to the last line listed
+L-<num>   - List previous <num> lines, update current line to first line listed
+
+M1        - Set Marker 1 to the current line
+M2        - Set Marker 2 to the current line
+
++<string> - Append <string> to end of current line
+
+D         - Delete current line
+D<num>    - Delete <num> lines starting at the current line
+D.        - Delete from current line to end of program
+DM        - Delete marked region
+
+EM        - Append marked lines (inclusive) to buffer
+E<num>    - Append next <num> lines to buffer
+ED<num>   - Append next <num> lines to buffer, and delete them
+I         - Insert lines from buffer, using the original line numbers
+I<step>   - Insert lines from buffer, using line numbers incremented by <step>
+
+A<step>            - Insert new lines into the program, automatically generating line numbers
+R<step>,<start>    - Renumber from the current line onwards, checking for out of order numbers
+R<step>,<start>,F  - Renumber from the current line onwards, no checking
+
+H,<pattern>,<max hits>                - Search for pattern
+C,<pattern>,<replacement>,<max hits>  - Search and replace (across multiple lines)
+S,<pattern>,<replacement>,<max hits>  - Search and replace (within the current line)
