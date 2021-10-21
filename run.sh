@@ -2,7 +2,7 @@
 
 export PYTHONPATH=../../py8dis/py8dis:../common:$PATH
 
-for i in disassembly_edit
+for i in disassembly_edit disassembly_debug
 do
     echo "Building $i"
     cd $i

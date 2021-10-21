@@ -5,6 +5,11 @@ import utils
 
 def add_atom_labels():
 
+    label(0xb000, "PIA")
+    expr_label(0xb001, "PIA+1")
+    expr_label(0xb002, "PIA+2")
+    expr_label(0xb003, "PIA+3")
+
     label(0x000D, "TOPL")
     label(0x000E, "TOPH")
     label(0x0012, "PAGEH")
@@ -21,6 +26,7 @@ def add_atom_labels():
     label(0xc3cd, "basic_pop_workspace_to_zeropage")
     label(0xc4de, "basic_process_equals_and_expression")
     label(0xc4e4, "basic_post_cmd_checks")
+    expr_label(0xc4e6, "basic_post_cmd_checks+2")
     label(0xc558, "basic_post_cmd_checks_and_next_cmd")
     label(0xc55b, "basic_next_command")
     label(0xc589, "basic_print_decimal")
@@ -37,6 +43,7 @@ def add_atom_labels():
     label(0xfd1a, "print_bel")
     label(0xffdd, "ossave")
     label(0xffe0, "osload")
+    label(0xffe3, "osrdch")
     label(0xffe6, "osecho")
     label(0xffe9, "osasci")
     label(0xffed, "oscrlf")

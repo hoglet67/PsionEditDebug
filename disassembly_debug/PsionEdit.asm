@@ -2,6 +2,7 @@ l0000 = &0000
 l0001 = &0001
 l0003 = &0003
 l0005 = &0005
+l0006 = &0006
 l0008 = &0008
 l0009 = &0009
 ALTTOPL = &000a
@@ -43,11 +44,11 @@ MARKER2H = &007f
 l0100 = &0100
 l0101 = &0101
 l0102 = &0102
-l013f = &013f
 l0150 = &0150
 BRKVECL = &0202
 BRKVECH = &0203
 VARIABLE_AT = &0321
+edit_cmd_AT = &2800
 basic_search_for_comma = &c231
 basic_warm_start = &c2cf
 basic_copy_function_to_arithmetic_workspace = &c3c8
@@ -80,52 +81,56 @@ oscli = &fff7
     guard &b000
 .pydis_start
     equb &40, &bf                                           ; a000: @.
-    ldx #&00
-    jsr ca019
-    bcc ca00c
-    jmp edit_cmd
-; Referenced 1 time by &a007
-.ca00c
-    ldx #&05
-    jsr ca019
-    bcc ca016
-    jmp debug_cmd
-; Referenced 1 time by &a011
-.ca016
+    ldx l0006
+    dex
+    beq ca00a
     jmp basic_post_cmd_checks_and_next_cmd
-; Referenced 2 times by &a004, &a00e
-.ca019
+; Referenced 1 time by &a005
+.ca00a
+    dex
+; Referenced 1 time by &a01f
+.ca00b
     ldy l0003
     dey
-; Referenced 1 time by &a021
-.ca01c
-    iny
-    lda (l0005),y
-    cmp #&20 ; ' '
-    beq ca01c
-    dex
-    dey
-; Referenced 1 time by &a030
-.ca025
+; Referenced 1 time by &a017
+.ca00e
     inx
     iny
-    lda la036,x
-    cmp #&0d
-    beq ca034
+    lda command_table,x
+    bmi ca021
     cmp (l0005),y
-    beq ca025
-    clc
-    rts
-; Referenced 1 time by &a02c
-.ca034
-    sec
-    rts
-.la036
-    equs "EDIT"
-    equb &0d                                                ; a03a: .
+    beq ca00e
+; Referenced 1 time by &a01d
+.ca019
+    inx
+    lda command_table-1,x
+    bpl ca019
+    bmi ca00b
+; Referenced 1 time by &a013
+.ca021
+    pha
+    lda command_table+1,x
+    pha
+    jmp basic_post_cmd_checks+2
+.command_table
+    equs "EDX"
+    equb >(edit_cmd-1)                                      ; a02c: .
+    equb <(edit_cmd-1)                                      ; a02d: .
     equs "DEBUG"
-    equb &0d                                                ; a040: .
-; Referenced 6 times by &a426, &a087, &aa2a, &a04d, &ae71, &a055
+    equb >(debug_cmd-1)                                     ; a033: .
+    equb <(debug_cmd-1)                                     ; a034: .
+    equb >(basic_next_command-1)                            ; a035: .
+    equb <(basic_next_command-1)                            ; a036: .
+; Referenced 1 time by &aff4
+.ca037
+    lda LINEPTRL
+    bne ca03d
+    dec LINEPTRH
+; Referenced 1 time by &a039
+.ca03d
+    dec LINEPTRL
+    bcs ca089
+; Referenced 5 times by &ae71, &aa2a, &a04d, &a426, &a055
 .ca041
     ldy #&00
 ; Referenced 2 times by &a063, &a057
@@ -142,11 +147,11 @@ oscli = &fff7
     dey
     bmi ca041
     bpl ca043
-; Referenced 1 time by &a052
+; Referenced 2 times by &a052, &a087
 .ca059
     sta l0100,y
     iny
-    cpy #&3f ; '?'
+    cpy #&7e ; '~'
     beq ca06a
     cmp #&0d
     bne ca043
@@ -155,23 +160,26 @@ oscli = &fff7
     rts
 ; Referenced 1 time by &a05f
 .ca06a
-    jsr print_bel
-    jsr oscrlf
     jsr print_string
-    equs "TOO LONG, RETYPE"
-    nop
-    jsr oscrlf
-    jmp ca041
+    equs &07, &0a, &0d, "FULL, HIT CR", &0a, &0d
+    ldy #&7e ; '~'
+; Referenced 1 time by &a085
+.ca080
+    jsr osrdch
+    cmp #&0d
+    bne ca080
+    beq ca059
+; Referenced 1 time by &a03f
+.ca089
+    jmp debug_cmd_M
 ; Referenced 1 time by &a135
 .multiply_by_10
     lda l007b
     pha
     lda l007a
     pha
-    asl l007a
-    rol l007b
-    asl l007a
-    rol l007b
+    jsr ca0a3
+    jsr ca0a3
     clc
     pla
     adc l007a
@@ -179,6 +187,8 @@ oscli = &fff7
     pla
     adc l007b
     sta l007b
+; Referenced 2 times by &a092, &a095
+.ca0a3
     asl l007a
     rol l007b
     rts
@@ -199,8 +209,8 @@ oscli = &fff7
     ldy #&01
     lda (LINEPTRL),y
     sta l0025
-    cmp #&ff
-    beq ca0da
+    cmp #&80
+    bcs ca0da
     iny
     lda (LINEPTRL),y
     sta l0016
@@ -225,7 +235,7 @@ oscli = &fff7
     lda TOPH
     sbc LINEPTRH
     rts
-; Referenced 12 times by &a182, &a344, &a945, &a80a, &a3cb, &a46d, &a115, &ab36, &a2b8, &a439, &a99a, &a66a
+; Referenced 12 times by &a182, &a344, &a945, &a66a, &a3cb, &a46d, &a115, &ab36, &a2b8, &a439, &a99a, &aaba
 .inc_lineptr_by_y
     jsr compare_lineptr_with_top
     bcs ca0fc
@@ -297,7 +307,7 @@ oscli = &fff7
     cmp PAGEH
     bne ca162
     jsr print_string
-    equs "**TOP**"
+    equs "*BEGIN*"
     nop
     jsr oscrlf
     sec
@@ -327,7 +337,7 @@ oscli = &fff7
 ; Referenced 1 time by &a175
 .ca17a
     rts
-; Referenced 8 times by &a869, &ab8c, &ab0d, &a1d1, &a7d6, &aa37, &ab5a, &a51e
+; Referenced 8 times by &a869, &ab8c, &ab0d, &a1d1, &a7d6, &aa37, &ab5a, &a51d
 .skip_forward_x_lines
     cpx #&00
     beq ca18a
@@ -807,7 +817,7 @@ oscli = &fff7
     jsr get_line_length_in_y
     jsr inc_lineptr_by_y
     jmp list_line
-; Referenced 17 times by &ac60, &aa00, &a9e2, &ae83, &ac64, &a9f6, &abf3, &a9e7, &adaa, &afcf, &af63, &afb6, &a9d8, &ac3b, &afdc, &ae7e, &aa05
+; Referenced 17 times by &ac60, &aa00, &a9e2, &af63, &ac64, &aa05, &a9e7, &adaa, &afcc, &ae83, &a9f6, &a9d8, &ac3b, &afdc, &afb3, &ae7e, &abf3
 .print_hex
     pha
     lsr a
@@ -836,10 +846,10 @@ oscli = &fff7
 .ca45e
     ldy #&01
     lda (LINEPTRL),y
-    cmp #&ff
-    beq ca474
+    cmp #&80
+    bcs ca474
     jsr get_line_length_in_y
-    cpy #&40 ; '@'
+    cpy #&80
     bcs ca488
     jsr inc_lineptr_by_y
     bcs ca488
@@ -943,13 +953,13 @@ oscli = &fff7
     sta l0076
     lda MARKER1H
     sta l0077
-    sec
     lda MARKER2L
     sta LINEPTRL
     lda MARKER2H
     sta LINEPTRH
     ldx #&01
     jsr skip_forward_x_lines
+    sec
     lda LINEPTRL
     sbc l0076
     sta l0074
@@ -1038,8 +1048,8 @@ oscli = &fff7
 .ca5bc
     ldy #&01
     lda (l0070),y
-    cmp #&ff
-    beq ca5fe
+    cmp #&80
+    bcs ca5fe
     dey
     lda #&0d
     sta (LINEPTRL),y
@@ -1183,7 +1193,7 @@ oscli = &fff7
 ; Referenced 1 time by &a67e
 .ca684
     rts
-; Referenced 6 times by &aea0, &aff0, &a8b0, &ae92, &af75, &aeda
+; Referenced 6 times by &aea0, &a783, &a8b0, &ae92, &af75, &aeda
 .input_hex
     lda #&00
     sta l0000,x
@@ -1239,22 +1249,22 @@ oscli = &fff7
     sta (LINEPTRL),y
     rts
 .la6ca
-    equs "QTLNDBRH SCO?A*><+MXIEZ-"
+    equs "QBLNDTRF SCO@A*><+MXIEZ-"
     equb &0d                                                ; a6e2: .
 .la6e3
     equb <(edit_cmd_Q)                                      ; a6e3: .
-    equb <(edit_cmd_T)                                      ; a6e4: .
+    equb <(edit_cmd_B)                                      ; a6e4: .
     equb <(edit_cmd_L)                                      ; a6e5: .
     equb <(edit_cmd_N)                                      ; a6e6: .
     equb <(edit_cmd_D)                                      ; a6e7: .
-    equb <(edit_cmd_B)                                      ; a6e8: .
+    equb <(edit_cmd_T)                                      ; a6e8: .
     equb <(edit_cmd_R)                                      ; a6e9: .
-    equb <(edit_cmd_H)                                      ; a6ea: .
+    equb <(edit_cmd_F)                                      ; a6ea: .
     equb <(edit_cmd_SPACE)                                  ; a6eb: .
     equb <(edit_cmd_S)                                      ; a6ec: .
     equb <(edit_cmd_C)                                      ; a6ed: .
     equb <(edit_cmd_O)                                      ; a6ee: .
-    equb <(edit_print_space_info)                           ; a6ef: .
+    equb <(edit_cmd_AT)                                     ; a6ef: .
     equb <(edit_cmd_A)                                      ; a6f0: .
     equb <(edit_cmd_STAR)                                   ; a6f1: .
     equb <(edit_cmd_GT)                                     ; a6f2: .
@@ -1268,18 +1278,18 @@ oscli = &fff7
     equb <(edit_cmd_MINUS)                                  ; a6fa: .
 .la6fb
     equb >(edit_cmd_Q)                                      ; a6fb: .
-    equb >(edit_cmd_T)                                      ; a6fc: .
+    equb >(edit_cmd_B)                                      ; a6fc: .
     equb >(edit_cmd_L)                                      ; a6fd: .
     equb >(edit_cmd_N)                                      ; a6fe: .
     equb >(edit_cmd_D)                                      ; a6ff: .
-    equb >(edit_cmd_B)                                      ; a700: .
+    equb >(edit_cmd_T)                                      ; a700: .
     equb >(edit_cmd_R)                                      ; a701: .
-    equb >(edit_cmd_H)                                      ; a702: .
+    equb >(edit_cmd_F)                                      ; a702: .
     equb >(edit_cmd_SPACE)                                  ; a703: .
     equb >(edit_cmd_S)                                      ; a704: .
     equb >(edit_cmd_C)                                      ; a705: .
     equb >(edit_cmd_O)                                      ; a706: .
-    equb >(edit_print_space_info)                           ; a707: .
+    equb >(edit_cmd_AT)                                     ; a707: .
     equb >(edit_cmd_A)                                      ; a708: .
     equb >(edit_cmd_STAR)                                   ; a709: .
     equb >(edit_cmd_GT)                                     ; a70a: .
@@ -1291,7 +1301,6 @@ oscli = &fff7
     equb >(edit_cmd_E)                                      ; a710: .
     equb >(edit_cmd_Z)                                      ; a711: .
     equb >(edit_cmd_MINUS)                                  ; a712: .
-; Referenced 1 time by &a009
 .edit_cmd
     lda #&5e ; '^'
     sta l0008
@@ -1356,14 +1365,18 @@ oscli = &fff7
     beq ca78b
     dex
     bpl ca771
-; Referenced 10 times by &a981, &a8c4, &aae5, &a966, &a92e, &a7af, &a910, &aacf, &ab7c, &a79f
+; Referenced 9 times by &a981, &a8c4, &aae5, &a966, &a92e, &a7af, &a910, &aacf, &ab7c
 .error_what
-    jsr print_bel
-    jsr print_string
-    equs "WHAT?"
-    nop
-    jsr oscrlf
+    jsr cae52
     jmp caa53
+; Referenced 1 time by &afee
+.ca77f
+    ldy #&00
+    ldx #&74 ; 't'
+    jsr input_hex
+    ldy #&00
+    sta (LINEPTRL),y
+    rts
 ; Referenced 1 time by &a774
 .ca78b
     lda la6e3,x
@@ -1374,14 +1387,14 @@ oscli = &fff7
 .edit_cmd_Q
     lda l0101
     cmp #&0d
-    beq ca7a2
-    jmp error_what
+    beq debug_cmd_Q
+    jsr edit_cmd_GT
 ; Referenced 1 time by &a79d
-.ca7a2
+.debug_cmd_Q
     ldx #&ff
     txs
     jmp basic_end
-.edit_cmd_T
+.edit_cmd_B
     lda l0101
     cmp #&0d
     beq ca7b2
@@ -1435,13 +1448,13 @@ oscli = &fff7
 .ca7fc
     ldy #&01
     lda (LINEPTRL),y
-    cmp #&ff
-    beq ca80f
+    cmp #&80
+    bcs ca80f
     jsr list_line
     jsr get_line_length_in_y
-    jsr inc_lineptr_by_y
+    jsr check_escape_and_inc_lineptr_by_y
     bcc ca7fc
-; Referenced 1 time by &a802
+; Referenced 2 times by &a818, &a802
 .ca80f
     rts
 ; Referenced 1 time by &a7f7
@@ -1449,16 +1462,11 @@ oscli = &fff7
     ldy #&02
     jsr input_decimal_raw
     jsr ca2a5
-    bcc la81c
-.ca81a
-la81c = ca81a+2
+    bcc ca80f
     jmp list_line
-; overlapping: ldy #&c9
-; Referenced 1 time by &a818
 ; Referenced 1 time by &a7f0
 .ca81d
     cmp #&2d ; '-'
-; overlapping: and l08f0
     beq ca829
     cmp #&42 ; 'B'
     bne ca83d
@@ -1539,7 +1547,7 @@ la81c = ca81a+2
     tax
     jsr ca1c9
     jmp list_line
-.edit_cmd_B
+.edit_cmd_T
     lda l0101
     cmp #&3d ; '='
     bne ca8c0
@@ -1614,7 +1622,7 @@ la81c = ca81a+2
     jsr skip_backwards_x_lines
     jsr list_line
     jmp caa53
-.edit_cmd_H
+.edit_cmd_F
     jsr count_delimiters
     cpx #&02
     beq ca931
@@ -1784,9 +1792,9 @@ la81c = ca81a+2
     bne caa40
     lda l0100
     rts
-; Referenced 5 times by &a788, &a924, &a95c, &aa1e, &a730
+; Referenced 5 times by &a730, &a95c, &a77c, &aa1e, &a924
 .caa53
-    lda #&54 ; 'T'
+    lda #&42 ; 'B'
     sta l0100
     lda #&0d
     sta l0101
@@ -1797,6 +1805,7 @@ la81c = ca81a+2
     lda #&20 ; ' '
     sta l0100
     jmp oscli
+; Referenced 1 time by &a79f
 .edit_cmd_GT
     jsr caaa6
     lda #&00
@@ -1830,19 +1839,22 @@ la81c = ca81a+2
     jmp ca721
 ; Referenced 2 times by &aa6b, &aa8e
 .caaa6
-    ldy #&00
-; Referenced 1 time by &aab1
-.caaa8
-    iny
-    lda l0100,y
-    sta l013f,y
-    cmp #&0d
-    bne caaa8
-    lda #&40 ; '@'
+    lda #&01
     sta l0052
     lda #&01
     sta l0053
     ldx #&52 ; 'R'
+    rts
+; Referenced 1 time by &a80a
+.check_escape_and_inc_lineptr_by_y
+    lda PIA+1
+    and #&20 ; ' '
+    bne caaba
+    sec
+    rts
+; Referenced 1 time by &aab6
+.caaba
+    jsr inc_lineptr_by_y
     rts
 .edit_cmd_PLUS
     jsr ca4a2
@@ -1880,8 +1892,8 @@ la81c = ca81a+2
     dey
     lda (LINEPTRL),y
     sta l007b
-    cmp #&ff
-    bne cab0b
+    cmp #&80
+    bcs cab0b
     lda #&00
     sta l007a
     sta l007b
@@ -2121,7 +2133,7 @@ la81c = ca81a+2
     jsr print_hex
     txa
     jmp print_hex
-; Referenced 4 times by &ada3, &afd5, &aba6, &afaf
+; Referenced 4 times by &afd2, &ada3, &aba6, &afae
 .cac67
     lda LINEPTRH
     ldx LINEPTRL
@@ -2196,13 +2208,13 @@ la81c = ca81a+2
     equb &1a, &1a, &26, &26, &72, &72, &88, &c8             ; ad5b: ..&&rr..
     equb &c4, &ca, &26, &48, &44, &44, &a2, &c8             ; ad63: ..&HDD..
 .lad6b
-    equs "QWDCFOBGAXYPRM"
+    equs "QWDLFOBGAXYPRM"
     equb &0d                                                ; ad79: .
 .lad7a
     equb <(debug_cmd_Q)                                     ; ad7a: .
     equb <(debug_cmd_W)                                     ; ad7b: .
     equb <(debug_cmd_D)                                     ; ad7c: .
-    equb <(debug_cmd_C)                                     ; ad7d: .
+    equb <(debug_cmd_L)                                     ; ad7d: .
     equb <(debug_cmd_F)                                     ; ad7e: .
     equb <(debug_cmd_O)                                     ; ad7f: .
     equb <(debug_cmd_B)                                     ; ad80: .
@@ -2217,7 +2229,7 @@ la81c = ca81a+2
     equb >(debug_cmd_Q)                                     ; ad88: .
     equb >(debug_cmd_W)                                     ; ad89: .
     equb >(debug_cmd_D)                                     ; ad8a: .
-    equb >(debug_cmd_C)                                     ; ad8b: .
+    equb >(debug_cmd_L)                                     ; ad8b: .
     equb >(debug_cmd_F)                                     ; ad8c: .
     equb >(debug_cmd_O)                                     ; ad8d: .
     equb >(debug_cmd_B)                                     ; ad8e: .
@@ -2228,11 +2240,11 @@ la81c = ca81a+2
     equb >(debug_cmd_P)                                     ; ad93: .
     equb >(debug_cmd_R)                                     ; ad94: .
     equb >(debug_cmd_M)                                     ; ad95: .
-; Referenced 1 time by &adc5
+; Referenced 2 times by &adc5, &ae76
 .cad96
     cmp #&20 ; ' '
     bcc cad9e
-    cmp #&80
+    cmp #&7f
     bcc cada0
 ; Referenced 1 time by &ad98
 .cad9e
@@ -2291,7 +2303,7 @@ la81c = ca81a+2
     stx l0079
     jsr debug_cmd_R
     jmp zzz_handler
-; Referenced 1 time by &afc5
+; Referenced 1 time by &afc2
 .cadf8
     ldx #&08
 ; Referenced 1 time by &ae04
@@ -2305,7 +2317,6 @@ la81c = ca81a+2
     dex
     bne cadfa
     rts
-; Referenced 1 time by &a013
 .debug_cmd
     cld
     lda #&08
@@ -2348,6 +2359,8 @@ la81c = ca81a+2
     beq cae61
     dex
     bpl cae4a
+; Referenced 1 time by &a779
+.cae52
     jsr print_bel
     jsr print_string
     equs "WHAT?"
@@ -2360,14 +2373,15 @@ la81c = ca81a+2
     lda lad88,x
     sta l0075
     jmp (l0074)
-; Referenced 5 times by &af68, &afe1, &ae88, &af09, &ae37
+; Referenced 5 times by &af68, &ae88, &ae37, &af09, &afe1
 .cae6e
     jsr osasci
     jmp ca041
-.debug_cmd_Q
-    ldx #&ff
-    txs
-    jmp basic_end
+; Referenced 1 time by &afd7
+.cae74
+    lda (l0070,x)
+    jsr cad96
+    rts
 .debug_cmd_W
     ldx #&72 ; 'r'
 ; Referenced 1 time by &af2a
@@ -2417,7 +2431,7 @@ la81c = ca81a+2
     dec l007a
     bne caebe
     rts
-.debug_cmd_C
+.debug_cmd_L
     lda l0101
     cmp #&0d
     bne caed2
@@ -2544,20 +2558,18 @@ la81c = ca81a+2
 ; Referenced 1 time by &adf2
 .debug_cmd_R
     jsr print_string
-    equs "PC    A  X  Y  NV BDIZC SP"
+    equs " PC   A  X  Y  NV BDIZC SP", &0a, &0d
     nop
-    jsr oscrlf
     jsr cac67
-    ldx #&00
-; Referenced 1 time by &afc1
-.cafb4
+; Referenced 1 time by &afbe
+.cafb1
     lda MARKER1L,x
     jsr print_hex
     lda #&20 ; ' '
     jsr osasci
     inx
     cpx #&03
-    bcc cafb4
+    bcc cafb1
     lda MARKER2H
     jsr cadf8
     lda #&20 ; ' '
@@ -2565,24 +2577,26 @@ la81c = ca81a+2
     lda l0079
     jsr print_hex
     jmp oscrlf
-; Referenced 2 times by &aff9, &affd
+; Referenced 4 times by &a089, &aff1, &affd, &aff9
 .debug_cmd_M
     jsr cac67
-    ldy #&00
-    lda (LINEPTRL),y
+    ldx #&02
+    jsr cae74
+    lda (LINEPTRL,x)
     jsr print_hex
     lda #&3f ; '?'
     jsr cae6e
-    cmp #&0d
+    cmp #&51 ; 'Q'
     beq cafff
-    cmp #&20 ; ' '
+    bcs caff4
+    cmp #&0d
     beq caff7
-    ldy #&00
-    ldx #&74 ; 't'
-    jsr input_hex
-    ldy #&00
-    sta (LINEPTRL),y
-; Referenced 1 time by &afea
+    jsr ca77f
+    jmp debug_cmd_M
+; Referenced 1 time by &afe8
+.caff4
+    jmp ca037
+; Referenced 1 time by &afec
 .caff7
     inc LINEPTRL
     bne debug_cmd_M
@@ -2597,19 +2611,19 @@ la81c = ca81a+2
 ; Label references by decreasing frequency:
 ;     print_hex:                           17
 ;     list_line:                           16
-;     oscrlf:                              15
 ;     osasci:                              14
 ;     get_line_length_in_y:                13
 ;     input_decimal:                       13
 ;     inc_lineptr_by_y:                    12
-;     error_what:                          10
-;     print_string:                         9
+;     oscrlf:                              11
+;     error_what:                           9
 ;     set_lineptr_to_page:                  8
 ;     skip_forward_x_lines:                 8
 ;     skip_backwards_x_lines:               8
-;     ca041:                                6
+;     print_string:                         8
 ;     input_decimal_raw:                    6
 ;     input_hex:                            6
+;     ca041:                                5
 ;     ca11f:                                5
 ;     edit_print_space_info:                5
 ;     caa53:                                5
@@ -2617,6 +2631,7 @@ la81c = ca81a+2
 ;     ca25d:                                4
 ;     cac67:                                4
 ;     cac88:                                4
+;     debug_cmd_M:                          4
 ;     compare_lineptr_with_top:             3
 ;     ca108:                                3
 ;     ca1c9:                                3
@@ -2634,9 +2649,9 @@ la81c = ca81a+2
 ;     cac70:                                3
 ;     caf61:                                3
 ;     basic_print_decimal:                  3
-;     print_bel:                            3
-;     ca019:                                2
 ;     ca043:                                2
+;     ca059:                                2
+;     ca0a3:                                2
 ;     ca126:                                2
 ;     ca162:                                2
 ;     ca18a:                                2
@@ -2659,6 +2674,7 @@ la81c = ca81a+2
 ;     ca76f:                                2
 ;     edit_cmd_L:                           2
 ;     ca7d4:                                2
+;     ca80f:                                2
 ;     ca919:                                2
 ;     ca94a:                                2
 ;     caaa6:                                2
@@ -2667,18 +2683,20 @@ la81c = ca81a+2
 ;     cabed:                                2
 ;     cac41:                                2
 ;     cac53:                                2
+;     cad96:                                2
 ;     cada3:                                2
 ;     caebe:                                2
-;     debug_cmd_M:                          2
-;     basic_end:                            2
-;     ca00c:                                1
-;     ca016:                                1
-;     ca01c:                                1
-;     ca025:                                1
-;     ca034:                                1
+;     ca00a:                                1
+;     ca00b:                                1
+;     ca00e:                                1
+;     ca019:                                1
+;     ca021:                                1
+;     ca037:                                1
+;     ca03d:                                1
 ;     ca050:                                1
-;     ca059:                                1
 ;     ca06a:                                1
+;     ca080:                                1
+;     ca089:                                1
 ;     multiply_by_10:                       1
 ;     ca0d0:                                1
 ;     ca0da:                                1
@@ -2757,22 +2775,20 @@ la81c = ca81a+2
 ;     ca6a8:                                1
 ;     ca6af:                                1
 ;     ca6b9:                                1
-;     edit_cmd:                             1
 ;     ca721:                                1
 ;     ca73e:                                1
 ;     ca753:                                1
 ;     ca755:                                1
 ;     ca771:                                1
+;     ca77f:                                1
 ;     ca78b:                                1
-;     ca7a2:                                1
+;     debug_cmd_Q:                          1
 ;     ca7b2:                                1
 ;     ca7c4:                                1
 ;     ca7db:                                1
 ;     ca7ee:                                1
 ;     ca7fc:                                1
-;     ca80f:                                1
 ;     ca810:                                1
-;     la81c:                                1
 ;     ca81d:                                1
 ;     ca829:                                1
 ;     ca82d:                                1
@@ -2807,7 +2823,9 @@ la81c = ca81a+2
 ;     caa3a:                                1
 ;     caa40:                                1
 ;     caa4c:                                1
-;     caaa8:                                1
+;     edit_cmd_GT:                          1
+;     check_escape_and_inc_lineptr_by_y:    1
+;     caaba:                                1
 ;     caad2:                                1
 ;     caad8:                                1
 ;     caae8:                                1
@@ -2841,7 +2859,6 @@ la81c = ca81a+2
 ;     cac7c:                                1
 ;     cac82:                                1
 ;     cac87:                                1
-;     cad96:                                1
 ;     cad9e:                                1
 ;     cada0:                                1
 ;     cada8:                                1
@@ -2849,10 +2866,11 @@ la81c = ca81a+2
 ;     cadd8:                                1
 ;     cadf8:                                1
 ;     cadfa:                                1
-;     debug_cmd:                            1
 ;     cae45:                                1
 ;     cae4a:                                1
+;     cae52:                                1
 ;     cae61:                                1
+;     cae74:                                1
 ;     cae7c:                                1
 ;     cae90:                                1
 ;     caea3:                                1
@@ -2868,36 +2886,45 @@ la81c = ca81a+2
 ;     caf5e:                                1
 ;     caf7e:                                1
 ;     debug_cmd_R:                          1
-;     cafb4:                                1
+;     cafb1:                                1
+;     caff4:                                1
 ;     caff7:                                1
 ;     cafff:                                1
+;     basic_post_cmd_checks+2:              1
 ;     basic_post_cmd_checks_and_next_cmd:   1
+;     basic_end:                            1
+;     print_bel:                            1
 ;     ossave:                               1
 ;     osload:                               1
+;     osrdch:                               1
 ;     osecho:                               1
 ;     oscli:                                1
+    assert <(basic_next_command-1) == &5a
+    assert <(debug_cmd-1) == &06
     assert <(debug_cmd_A) == &5f
     assert <(debug_cmd_B) == &28
-    assert <(debug_cmd_C) == &c6
     assert <(debug_cmd_D) == &95
     assert <(debug_cmd_F) == &f3
     assert <(debug_cmd_G) == &2d
-    assert <(debug_cmd_M) == &d5
+    assert <(debug_cmd_L) == &c6
+    assert <(debug_cmd_M) == &d2
     assert <(debug_cmd_O) == &1a
     assert <(debug_cmd_P) == &89
-    assert <(debug_cmd_Q) == &74
+    assert <(debug_cmd_Q) == &a2
     assert <(debug_cmd_R) == &8e
     assert <(debug_cmd_W) == &7a
     assert <(debug_cmd_X) == &7f
     assert <(debug_cmd_Y) == &84
     assert <(debug_cmd_loop-1) == &2a
+    assert <(edit_cmd-1) == &12
     assert <(edit_cmd_A) == &0b
-    assert <(edit_cmd_B) == &a5
+    assert <(edit_cmd_AT) == &00
+    assert <(edit_cmd_B) == &a8
     assert <(edit_cmd_C) == &7a
     assert <(edit_cmd_D) == &79
     assert <(edit_cmd_E) == &13
+    assert <(edit_cmd_F) == &27
     assert <(edit_cmd_GT) == &6b
-    assert <(edit_cmd_H) == &27
     assert <(edit_cmd_I) == &ee
     assert <(edit_cmd_L) == &b5
     assert <(edit_cmd_LT) == &8e
@@ -2911,35 +2938,38 @@ la81c = ca81a+2
     assert <(edit_cmd_S) == &5f
     assert <(edit_cmd_SPACE) == &4b
     assert <(edit_cmd_STAR) == &63
-    assert <(edit_cmd_T) == &a8
+    assert <(edit_cmd_T) == &a5
     assert <(edit_cmd_X) == &de
     assert <(edit_cmd_Z) == &62
     assert <(edit_cmd_loop-1) == &35
-    assert <(edit_print_space_info) == &c5
     assert <brk_handler == &db
     assert <zzz_handler == &50
+    assert >(basic_next_command-1) == &c5
+    assert >(debug_cmd-1) == &ae
     assert >(debug_cmd_A) == &af
     assert >(debug_cmd_B) == &af
-    assert >(debug_cmd_C) == &ae
     assert >(debug_cmd_D) == &ae
     assert >(debug_cmd_F) == &ae
     assert >(debug_cmd_G) == &af
+    assert >(debug_cmd_L) == &ae
     assert >(debug_cmd_M) == &af
     assert >(debug_cmd_O) == &af
     assert >(debug_cmd_P) == &af
-    assert >(debug_cmd_Q) == &ae
+    assert >(debug_cmd_Q) == &a7
     assert >(debug_cmd_R) == &af
     assert >(debug_cmd_W) == &ae
     assert >(debug_cmd_X) == &af
     assert >(debug_cmd_Y) == &af
     assert >(debug_cmd_loop-1) == &ae
+    assert >(edit_cmd-1) == &a7
     assert >(edit_cmd_A) == &aa
-    assert >(edit_cmd_B) == &a8
+    assert >(edit_cmd_AT) == &28
+    assert >(edit_cmd_B) == &a7
     assert >(edit_cmd_C) == &a9
     assert >(edit_cmd_D) == &a8
     assert >(edit_cmd_E) == &ab
+    assert >(edit_cmd_F) == &a9
     assert >(edit_cmd_GT) == &aa
-    assert >(edit_cmd_H) == &a9
     assert >(edit_cmd_I) == &aa
     assert >(edit_cmd_L) == &a7
     assert >(edit_cmd_LT) == &aa
@@ -2953,11 +2983,10 @@ la81c = ca81a+2
     assert >(edit_cmd_S) == &a9
     assert >(edit_cmd_SPACE) == &a9
     assert >(edit_cmd_STAR) == &aa
-    assert >(edit_cmd_T) == &a7
+    assert >(edit_cmd_T) == &a8
     assert >(edit_cmd_X) == &aa
     assert >(edit_cmd_Z) == &ab
     assert >(edit_cmd_loop-1) == &a7
-    assert >(edit_print_space_info) == &a9
     assert >brk_handler == &ad
     assert >zzz_handler == &af
 

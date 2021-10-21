@@ -1,54 +1,77 @@
-##############################################################
-PSION EDIT / DEBUG ROM
-##############################################################
+######################################################################
+#                     PSION EDIT / DEBUG ROMs                        #
+######################################################################
 
-##############################################################
-# 3 Common commands
-##############################################################
+In 1982 Psion Computers launched a Utility ROM for the Acorn
+Atom. This text is from a Magazine Article at the time:
 
-Q         - Quit
+PROGRAM TEXT EDITOR, DEBUGGING AIDS, DISASSEMBLER with 57 commands
+which allow you to efficiently edit, debug, append, insert, replace,
+renumber, extract etc. etc. Basic and Assember Programs. Features
+include: local and global string search and replace commands;
+automatic numbering and renumbering, multiple commands; handles more
+than one text space; transfers sections of text from one space to
+another; memory dump and modify register display on break.
+
+Copies of the ROMs still exist, but the documentation for how to use
+the ROM is still missing.
+
+In the Atom Software Archive there are currently two Psion ROMs, one
+called Psion Edit (CRC=129F) and the other called Psion Debug
+(CRC=0160).
+
+Using SteveF's excellent Py8dis disassembler we have disassembled
+both ROMs and reverse engineered all of the commands.
+
+It turns out that rather than being different ROMs, Psion Edit and
+Psion Debug are actually just different versions (in time) of the same
+ROM, and both provide broadly the same edit and debug capabilities.
+
+Psion Edit is the earlier version and provides both EDIT and DEBUG
+commands. Psion Debug is a later version with a few minor improvements
+and bug fixes. In addition, the EDIT command has been renamed to EDX
+to avoid conflicts with Acorns Word Pack ROM.
+
+As Psion Debug contains a number of bug fixes over Psion Edit, it's
+recommended to use that version.
+
+See below for a detailed list of the differences.
+
+The documentation below is accurate for Psion Debug.
+
+######################################################################
+# EDIT commands                                                      #
+######################################################################
+
+The editor is a sophisticated line-based editor for Atom basic
+programs.
+
+To launch the editor, type EDX (or EDIT in the earlier version).
+
+The following commands are then available:
+
+[ <space> ... ] <number> <line> - Replace the existing line in the normal way.
+                                  Lines can be up to 128 characters
+
+Q         - Quit, exits back to BASIC
 ON        - Printer On
 OFF       - Printer Off
-
-##############################################################
-# 12 DEBUG commands
-##############################################################
-
-W         - Edit PC
-D         - Dump memory in hex/ascii     ; D or D<num lines> or D,<to addr>
-C         - Disassemble memory           ; C or C<num lines> or C,<to addr>
-F         - Edit dump memory line length
-B         - Set/Clear breakpoint
-G         - Goto PC
-A         - Edit A
-X         - Edit X
-Y         - Edit Y
-P         - Edit Flags
-R         - Print Registers
-M         - Edit Memory
-
-##############################################################
-# 42 EDIT commands
-##############################################################
-
-[ <space> ... ] <number> <line> - Replace the existing line in the normal way
-
 *COMMAND  - Execute a * Command
 >FILE     - SAVE program in the text space
 <FILE     - LOAD program to the text space
 NEW       - same as NEW in Atom Basic
 OLD       - same as OLD in Atom Basic
 
-?         - Shows page/top of each text and buffer space
+@         - Execute a user defined command loaded at #2800
 X         - Swap text space and buffer space
-B=<hex2>  - Set the buffer text space to <hex2>
+T=<hex2>  - Set the buffer text space to <hex2>
 D=<char>  - Sets comment character to <char> (default is ^) - input beyond this is ignored
 
 Z<string> - Process <string> as a command and also save it to the cmd buffer (0x150)
 -         - Re-execute the command in the command buffer
 
-T         - Move to top line
-B         - Move to bottom line
+B         - Move to beginning of the program (begin)
+T         - Move to end of the program (top)
 N         - Move to next line
 N-<num>   - Move backwards <num> lines
 N<num>    - Move forward <num> lines
@@ -56,6 +79,7 @@ N<num>    - Move forward <num> lines
 L         - List current line, current line unchanged
 LA        - List area containing current line (-4,+5), current line unchanged
 L.        - List all lines, update current line to after the last line listed
+L.<num>   - List a single line (by number) and updatethe current line to that line
 LM        - List between marker1 and marker2, and update current line to marker2
 LF        - List next 10 lines, update current line to last line listed
 L<num >   - List next <num> lines, update current line to the last line listed
@@ -81,6 +105,111 @@ A<step>            - Insert new lines into the program, automatically generating
 R<step>,<start>    - Renumber from the current line onwards, checking for out of order numbers
 R<step>,<start>,F  - Renumber from the current line onwards, no checking
 
-H,<pattern>,<max hits>                - Search for pattern
+F,<pattern>,<max hits>                - Find instances of the pattern
 C,<pattern>,<replacement>,<max hits>  - Search and replace (across multiple lines)
 S,<pattern>,<replacement>,<max hits>  - Search and replace (within the current line)
+
+
+######################################################################
+# DEBUG commands                                                     #
+######################################################################
+
+The debugger provides three broad capabilites:
+- a disassembler
+- a memory dump (in hex and ascii)
+- a memory editor
+- dump all 6502 registers
+- edit individual 6502 registers
+- debug a machine code program in RAM using a single breakpoint
+
+Unfortunately, the debugger lacks any single-stepping capabilities.
+
+To launch the debugger, type DEBUG.
+
+The following commands are then available:
+
+Q         - Quit, exits back to BASIC
+ON        - Printer On
+OFF       - Printer Off
+W         - Edit PC
+D         - Dump memory in hex/ascii     ; D or D<num lines> or D,<to addr>
+L         - Disassemble memory           ; L or L<num lines> or L,<to addr>
+F         - Edit dump memory line length
+B         - Set/Clear breakpoint
+G         - Goto PC
+A         - Edit A
+X         - Edit X
+Y         - Edit Y
+P         - Edit Flags
+R         - Print Registers
+M         - Edit Memory
+
+######################################################################
+# Differences between Psion Edit and Psion Debug ROM versions        #
+######################################################################
+
+Psion Debug contains the following changes over Psion Edit:
+
+Common changes:
+===============
+
+- There is a new implementation of the command interpreter that is
+  more compact and prevents the DEBUG and EDX commands being used in
+  Basic programs.
+
+Edit specific changes:
+======================
+
+- The edit command is changed from EDIT to EDX to avoid conflicts with
+  the Acorn Word Pack ROM.
+
+- The maximum BASIC program line length is increased from 64
+  characters to 128 characters.
+
+- If you reach the maximum line length the system no longer crashes.
+
+- The start of the program has been renamed from **TOP** to *BEGIN*,
+  probably to avoid confusion with the term TOP (on the BBC Micro)
+  which signifies the end of the program.
+
+- B and T commands have been swapped, so B moves to the beginning of
+  the program and T moves to the end of the program (TOP).
+
+- The B= command to set the buffer space is now T=. This is likely an
+  unintended consequence of swapping T and B.
+
+- The H command (find text in a program) has been changed to F.
+
+- the ? command (which printed info about the text and buffers spaces)
+  has been removed. Instead, use the OLD command.
+
+- an @ command has been added, which invokes a user defined command at
+  #2800. This allows the editor to be extended.
+
+- when searching for the end of program, the sequence (0D) (80-FF) is
+  now used rather (0D) (FF). This is more consistent with how Atom
+  Basic itself works.
+
+- listing a long program can now be interrupted by pressing ESCAPE
+
+- Fix a minor bug with the L.<num> command where the line number
+  doesn't exist.
+
+Debug specific changes:
+=======================
+
+- The C command (disassemble) has been changed to L.
+
+- The M command (memory edit) is now slightly easier to use:
+   - <hex> <return> to change the current location
+   - <return> to move to the next address (this was <space> <return>)
+   - <Q> <return> to quit (this was <return>)
+
+- The M command (memory edit) now shows the current ASCII value as
+  well the the current hex value.
+
+- When dumping memory, the #7F character (delete) is now counted as a
+  control code, so the display formatting doesn't get messed up.
+
+- Minor change to the formatting of the R command (print registers) to
+  centre the PC label over the 4-digit program counter.
