@@ -48,24 +48,34 @@ programs.
 
 To launch the editor, type EDX (or EDIT in the earlier version).
 
-The following commands are then available:
+After the ? prompt you can enter one of:
 
-[ <space> ... ] <number> <line> - Replace the existing line in the normal way.
-                                  Lines can be up to 128 characters
+<command> <return>
+    - Execute a single editor command (see below)
 
-Q         - Quit, exits back to BASIC
+<command> [ <delim> <command> ...] <return>
+    - Execute multiple editor commands
+    - Tthe default delimiter is ^ (this can be changed with D=<char>)
+
+[ <space> ... ] <number> <line> <return>
+    - Replace the existing line in the normal way; lnes can be up to 128 characters
+
+The following editor commands are then available:
+
+Q         - Quit, exiting back to BASIC
+Q<FILE>   - Quit, saving the current program, and exiting back to BASIC
 ON        - Printer On
 OFF       - Printer Off
-*COMMAND  - Execute a * Command
->FILE     - SAVE program in the text space
-<FILE     - LOAD program to the text space
+*<COMMAND>- Execute a * Command
+><FILE>   - SAVE program in the text space
+<<FILE>   - LOAD program to the text space
 NEW       - same as NEW in Atom Basic
 OLD       - same as OLD in Atom Basic
 
 @         - Execute a user defined command loaded at #2800
 X         - Swap text space and buffer space
 T=<hex2>  - Set the buffer text space to <hex2>
-D=<char>  - Sets comment character to <char> (default is ^) - input beyond this is ignored
+D=<char>  - Sets command delimiter to <char> (default is ^)
 
 Z<string> - Process <string> as a command and also save it to the cmd buffer (0x150)
 -         - Re-execute the command in the command buffer
@@ -81,6 +91,7 @@ LA        - List area containing current line (-4,+5), current line unchanged
 L.        - List all lines, update current line to after the last line listed
 L.<num>   - List a single line (by number) and updatethe current line to that line
 LM        - List between marker1 and marker2, and update current line to marker2
+LB        - List previous 10 lines, update current line to previous line listed
 LF        - List next 10 lines, update current line to last line listed
 L<num >   - List next <num> lines, update current line to the last line listed
 L-<num>   - List previous <num> lines, update current line to first line listed
@@ -98,12 +109,14 @@ DM        - Delete marked region
 EM        - Append marked lines (inclusive) to buffer
 E<num>    - Append next <num> lines to buffer
 ED<num>   - Append next <num> lines to buffer, and delete them
-I         - Insert lines from buffer, using the original line numbers
-I<step>   - Insert lines from buffer, using line numbers incremented by <step>
+
+I<step>   - Insert lines from buffer before the current line, using line numbers incremented by <step>
+            (there is bug in this command that results in out of sequence lines)
 
 A<step>            - Insert new lines into the program, automatically generating line numbers
-R<step>,<start>    - Renumber from the current line onwards, checking for out of order numbers
-R<step>,<start>,F  - Renumber from the current line onwards, no checking
+R<step>            - Renumber the current line onwards, in steps of <step>
+R<step>,<start>    - Renumber the current line onwards, starting at <start>, in steps of <step>
+R<step>,<start>,F  - Renumber the current line onwards, starting at <start>, in steps of <step>, allowing out of sequence numbers
 
 F,<pattern>,<max hits>                - Find instances of the pattern
 C,<pattern>,<replacement>,<max hits>  - Search and replace (across multiple lines)
@@ -190,7 +203,7 @@ Edit specific changes:
   now used rather (0D) (FF). This is more consistent with how Atom
   Basic itself works.
 
-- listing a long program can now be interrupted by pressing ESCAPE
+- The L. command (list all)  can now be interrupted by pressing ESCAPE
 
 - Fix a minor bug with the L.<num> command where the line number
   doesn't exist.
