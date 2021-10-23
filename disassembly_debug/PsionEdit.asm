@@ -5,9 +5,12 @@ l0005 = &0005
 l0006 = &0006
 l0008 = &0008
 l0009 = &0009
-ALTTOPL = &000a
-ALTTOPH = &000b
+ALTTOPX = &000a
+BRKADRL = &000a
+ALTTOLH = &000b
+BRLADRH = &000b
 ALTPAGEH = &000c
+BRKINSTR = &000c
 TOPL = &000d
 TOPH = &000e
 PAGEH = &0012
@@ -28,19 +31,26 @@ l005b = &005b
 l0070 = &0070
 l0071 = &0071
 LINEPTRL = &0072
+REGPCL = &0072
 LINEPTRH = &0073
+REGPCH = &0073
 l0074 = &0074
 l0075 = &0075
 l0076 = &0076
 l0077 = &0077
 l0078 = &0078
 l0079 = &0079
+REGSP = &0079
 l007a = &007a
 l007b = &007b
 MARKER1L = &007c
+REGA = &007c
 MARKER1H = &007d
+REGX = &007d
 MARKER2L = &007e
+REGY = &007e
 MARKER2H = &007f
+REGP = &007f
 l0100 = &0100
 l0101 = &0101
 l0102 = &0102
@@ -981,18 +991,18 @@ oscli = &fff7
     pha
     lda TOPH
     pha
-    lda ALTTOPL
+    lda ALTTOPX
     sta TOPL
     sta LINEPTRL
-    lda ALTTOPH
+    lda ALTTOLH
     sta TOPH
     sta LINEPTRH
     lda ALTPAGEH
     sta PAGEH
     pla
-    sta ALTTOPH
+    sta ALTTOLH
     pla
-    sta ALTTOPL
+    sta ALTTOPX
     pla
     sta ALTPAGEH
     sec
@@ -1021,10 +1031,10 @@ oscli = &fff7
     lda LINEPTRH
     sta l0071
     sec
-    lda ALTTOPL
+    lda ALTTOPX
     sbc #&02
     sta l0074
-    lda ALTTOPH
+    lda ALTTOLH
     sbc ALTPAGEH
     sta l0075
     ora l0074
@@ -1113,39 +1123,39 @@ oscli = &fff7
 ; Referenced 2 times by &ab52, &ab25
 .append_line_from_text_to_buffer
     sec
-    lda ALTTOPL
+    lda ALTTOPX
     sbc #&02
-    sta ALTTOPL
+    sta ALTTOPX
     bcs ca624
-    dec ALTTOPH
+    dec ALTTOLH
 ; Referenced 1 time by &a620
 .ca624
     ldy #&01
     lda (LINEPTRL),y
-    sta (ALTTOPL),y
+    sta (ALTTOPX),y
     cmp #&ff
     beq ca641
     iny
     lda (LINEPTRL),y
-    sta (ALTTOPL),y
+    sta (ALTTOPX),y
 ; Referenced 1 time by &a63a
 .ca633
     iny
     lda (LINEPTRL),y
-    sta (ALTTOPL),y
+    sta (ALTTOPX),y
     cmp #&0d
     bne ca633
     lda #&ff
     iny
-    sta (ALTTOPL),y
+    sta (ALTTOPX),y
 ; Referenced 1 time by &a62c
 .ca641
     tya
     sec
-    adc ALTTOPL
-    sta ALTTOPL
+    adc ALTTOPX
+    sta ALTTOPX
     bcc ca64b
-    inc ALTTOPH
+    inc ALTTOLH
 ; Referenced 1 time by &a647
 .ca64b
     rts
@@ -1306,9 +1316,9 @@ oscli = &fff7
     sta l0008
     lda #&82
     sta ALTPAGEH
-    sta ALTTOPH
+    sta ALTTOLH
     lda #&02
-    sta ALTTOPL
+    sta ALTTOPX
 ; Referenced 1 time by &aaa3
 .ca721
     jsr set_top_to_end_of_program
@@ -1554,11 +1564,11 @@ oscli = &fff7
     ldy #&02
     ldx #&0a
     jsr input_hex
-    lda ALTTOPL
-    sta ALTTOPH
+    lda ALTTOPX
+    sta ALTTOLH
     sta ALTPAGEH
     lda #&02
-    sta ALTTOPL
+    sta ALTTOPX
     jmp edit_print_space_info
 ; Referenced 1 time by &a8aa
 .ca8c0
@@ -1745,9 +1755,9 @@ oscli = &fff7
     jsr print_hex
     lda #&2d ; '-'
     jsr osasci
-    lda ALTTOPH
+    lda ALTTOLH
     jsr print_hex
-    lda ALTTOPL
+    lda ALTTOPX
     jsr print_hex
     jmp oscrlf
 .edit_cmd_A
@@ -1985,15 +1995,15 @@ oscli = &fff7
     jsr caba6
     jsr oscrlf
     jsr cac79
-    sta LINEPTRL
-    sty LINEPTRH
+    sta REGPCL
+    sty REGPCH
     dec l0009
     bne cab94
     rts
 ; Referenced 1 time by &ab94
 .caba6
     jsr cac67
-    lda (LINEPTRL,x)
+    lda (REGPCL,x)
     tay
     lsr a
     bcc cabba
@@ -2054,7 +2064,7 @@ oscli = &fff7
     pha
 ; Referenced 1 time by &abfe
 .cabf1
-    lda (LINEPTRL),y
+    lda (REGPCL),y
     jsr print_hex
     ldx #&01
 ; Referenced 1 time by &ac04
@@ -2099,7 +2109,7 @@ oscli = &fff7
 .cac33
     lda l0078
     cmp #&e8
-    lda (LINEPTRL),y
+    lda (REGPCL),y
     bcs cac57
     jsr print_hex
     dey
@@ -2135,8 +2145,8 @@ oscli = &fff7
     jmp print_hex
 ; Referenced 4 times by &afd2, &ada3, &aba6, &afae
 .cac67
-    lda LINEPTRH
-    ldx LINEPTRL
+    lda REGPCH
+    ldx REGPCL
     jsr cac60
 ; Referenced 1 time by &ac26
 .cac6e
@@ -2156,13 +2166,13 @@ oscli = &fff7
     sec
 ; Referenced 1 time by &ac57
 .cac7c
-    ldy LINEPTRH
+    ldy REGPCH
     tax
     bpl cac82
     dey
 ; Referenced 1 time by &ac7f
 .cac82
-    adc LINEPTRL
+    adc REGPCL
     bcc cac87
     iny
 ; Referenced 1 time by &ac84
@@ -2258,7 +2268,7 @@ oscli = &fff7
     ldy #&00
 ; Referenced 1 time by &adb5
 .cada8
-    lda (LINEPTRL),y
+    lda (REGPCL),y
     jsr print_hex
     lda #&20 ; ' '
     jsr osasci
@@ -2271,38 +2281,38 @@ oscli = &fff7
     ldy #&00
 ; Referenced 1 time by &adcb
 .cadc1
-    lda (LINEPTRL),y
+    lda (REGPCL),y
     ldx #&03
     jsr cad96
     iny
     cpy l0008
     bne cadc1
     clc
-    lda LINEPTRL
+    lda REGPCL
     adc l0008
-    sta LINEPTRL
+    sta REGPCL
     bcc cadd8
-    inc LINEPTRH
+    inc REGPCH
 ; Referenced 1 time by &add4
 .cadd8
     jmp oscrlf
 .brk_handler
-    sta MARKER1L
+    sta REGA
     pla
-    sta MARKER2H
+    sta REGP
     pla
     sec
     sbc #&02
-    sta LINEPTRL
+    sta REGPCL
     pla
     sbc #&00
-    sta LINEPTRH
-    stx MARKER1H
-    sty MARKER2L
+    sta REGPCH
+    stx REGX
+    sty REGY
     tsx
-    stx l0079
+    stx REGSP
     jsr debug_cmd_R
-    jmp zzz_handler
+    jmp brk_complete
 ; Referenced 1 time by &afc2
 .cadf8
     ldx #&08
@@ -2322,14 +2332,14 @@ oscli = &fff7
     lda #&08
     sta l0008
     lda #&00
-    sta ALTTOPL
-    sta ALTTOPH
-    sta ALTPAGEH
-    sta MARKER1L
-    sta MARKER1H
-    sta MARKER2L
+    sta BRKADRL
+    sta BRLADRH
+    sta BRKINSTR
+    sta REGA
+    sta REGX
+    sta REGY
     lda #&20 ; ' '
-    sta MARKER2H
+    sta REGP
     sta l0100
     lda #<brk_handler
     sta BRKVECL
@@ -2410,9 +2420,9 @@ oscli = &fff7
 .caea3
     jsr cada3
     lda l007a
-    cmp LINEPTRL
+    cmp REGPCL
     lda l007b
-    sbc LINEPTRH
+    sbc REGPCH
     bcs caea3
     rts
 ; Referenced 1 time by &ae9a
@@ -2449,9 +2459,9 @@ oscli = &fff7
     lda #&01
     jsr cab92
     lda l007a
-    cmp LINEPTRL
+    cmp REGPCL
     lda l007b
-    sbc LINEPTRH
+    sbc REGPCH
     bcs caedd
     rts
 ; Referenced 1 time by &aed4
@@ -2492,37 +2502,37 @@ oscli = &fff7
     ldx #&0a
     jmp cae7c
 .debug_cmd_G
-    lda ALTTOPL
-    ora ALTTOPH
+    lda BRKADRL
+    ora BRLADRH
     beq caf3d
     ldy #&00
-    lda (ALTTOPL),y
-    sta ALTPAGEH
+    lda (BRKADRL),y
+    sta BRKINSTR
     lda #&00
-    sta (ALTTOPL),y
+    sta (BRKADRL),y
 ; Referenced 1 time by &af31
 .caf3d
-    lda #>zzz_handler
+    lda #>brk_complete
     pha
-    lda #<zzz_handler ; 'P'
+    lda #<brk_complete ; 'P'
     pha
-    lda MARKER2H
+    lda REGP
     pha
-    lda MARKER1L
-    ldx MARKER1H
-    ldy MARKER2L
+    lda REGA
+    ldx REGX
+    ldy REGY
     plp
-    jmp (LINEPTRL)
+    jmp (REGPCL)
 ; Referenced 1 time by &adf5
-.zzz_handler
+.brk_complete
     nop
     cld
-    lda ALTTOPL
-    ora ALTTOPH
+    lda BRKADRL
+    ora BRLADRH
     beq caf5e
     ldy #&00
-    lda ALTPAGEH
-    sta (ALTTOPL),y
+    lda BRKINSTR
+    sta (BRKADRL),y
 ; Referenced 1 time by &af56
 .caf5e
     rts
@@ -2563,18 +2573,18 @@ oscli = &fff7
     jsr cac67
 ; Referenced 1 time by &afbe
 .cafb1
-    lda MARKER1L,x
+    lda REGA,x
     jsr print_hex
     lda #&20 ; ' '
     jsr osasci
     inx
     cpx #&03
     bcc cafb1
-    lda MARKER2H
+    lda REGP
     jsr cadf8
     lda #&20 ; ' '
     jsr osasci
-    lda l0079
+    lda REGSP
     jsr print_hex
     jmp oscrlf
 ; Referenced 4 times by &a089, &aff1, &affd, &aff9
@@ -2582,7 +2592,7 @@ oscli = &fff7
     jsr cac67
     ldx #&02
     jsr cae74
-    lda (LINEPTRL,x)
+    lda (REGPCL,x)
     jsr print_hex
     lda #&3f ; '?'
     jsr cae6e
@@ -2598,9 +2608,9 @@ oscli = &fff7
     jmp ca037
 ; Referenced 1 time by &afec
 .caff7
-    inc LINEPTRL
+    inc REGPCL
     bne debug_cmd_M
-    inc LINEPTRH
+    inc REGPCH
     bne debug_cmd_M
 ; Referenced 1 time by &afe6
 .cafff
@@ -2882,7 +2892,7 @@ oscli = &fff7
 ;     caf19:                                1
 ;     caf25:                                1
 ;     caf3d:                                1
-;     zzz_handler:                          1
+;     brk_complete:                         1
 ;     caf5e:                                1
 ;     caf7e:                                1
 ;     debug_cmd_R:                          1
@@ -2942,8 +2952,8 @@ oscli = &fff7
     assert <(edit_cmd_X) == &de
     assert <(edit_cmd_Z) == &62
     assert <(edit_cmd_loop-1) == &35
+    assert <brk_complete == &50
     assert <brk_handler == &db
-    assert <zzz_handler == &50
     assert >(basic_next_command-1) == &c5
     assert >(debug_cmd-1) == &ae
     assert >(debug_cmd_A) == &af
@@ -2987,7 +2997,7 @@ oscli = &fff7
     assert >(edit_cmd_X) == &aa
     assert >(edit_cmd_Z) == &ab
     assert >(edit_cmd_loop-1) == &a7
+    assert >brk_complete == &af
     assert >brk_handler == &ad
-    assert >zzz_handler == &af
 
 save pydis_start, pydis_end

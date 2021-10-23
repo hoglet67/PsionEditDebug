@@ -1,22 +1,37 @@
 from commands import *
 import utils
 
+def my_label_maker(addr, context, suggestion):
+    if context < 0xAB92:
+        if addr == 0x000a: return "ALTTOPX"
+        if addr == 0x000b: return "ALTTOLH"
+        if addr == 0x000c: return "ALTPAGEH"
+        if addr == 0x0072: return "LINEPTRL"
+        if addr == 0x0073: return "LINEPTRH"
+        if addr == 0x0079: return "l0079"
+        if addr == 0x007C: return "MARKER1L"
+        if addr == 0x007D: return "MARKER1H"
+        if addr == 0x007E: return "MARKER2L"
+        if addr == 0x007F: return "MARKER2H"
+    else:
+        if addr == 0x000a: return "BRKADRL"
+        if addr == 0x000b: return "BRLADRH"
+        if addr == 0x000c: return "BRKINSTR"
+        if addr == 0x0072: return "REGPCL"
+        if addr == 0x0073: return "REGPCH"
+        if addr == 0x0079: return "REGSP"
+        if addr == 0x007C: return "REGA"
+        if addr == 0x007D: return "REGX"
+        if addr == 0x007E: return "REGY"
+        if addr == 0x007F: return "REGP"
+    return suggestion
+
 def add_psion_labels():
 
     config.set_label_references(True);
     config.set_hex_dump(False);
 
-    label(0x000a, "ALTTOPL")
-    label(0x000b, "ALTTOPH")
-    label(0x000c, "ALTPAGEH")
-
-    label(0x0072, "LINEPTRL")
-    label(0x0073, "LINEPTRH")
-
-    label(0x007C, "MARKER1L")
-    label(0x007D, "MARKER1H")
-    label(0x007E, "MARKER2L")
-    label(0x007F, "MARKER2H")
+    set_label_maker_hook(my_label_maker)
 
     label(0xa0a8, "set_lineptr_to_page")
     label(0xa0b1, "list_line")
@@ -62,9 +77,9 @@ def add_psion_labels():
     expr(0xa737, ">(edit_cmd_loop-1)")
     expr(0xa73a, "<(edit_cmd_loop-1)")
 
-    entry(0xaf50, "zzz_handler")
-    expr(0xaf3e, ">zzz_handler")
-    expr(0xaf41, "<zzz_handler")
+    entry(0xaf50, "brk_complete")
+    expr(0xaf3e, ">brk_complete")
+    expr(0xaf41, "<brk_complete")
 
     byte(0xac8d, 0x44)
     byte(0xacd1, 0x0D)
